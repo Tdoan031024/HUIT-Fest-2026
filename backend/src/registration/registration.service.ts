@@ -40,6 +40,27 @@ type RegistrationRecord = {
   updatedAt: Date;
 };
 
+type AdminRegistrationRow = {
+  id: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  audience: string;
+  schoolOrStudentId: string;
+  schoolName: string;
+  studentId: string;
+  birthDate: string;
+  referralCode: string;
+  status: RegistrationStatus;
+  priority: boolean;
+  rejectedReason: string;
+  ticketCode: string;
+  emailSentAt: string;
+  note: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 @Injectable()
 export class RegistrationService {
   constructor(
@@ -124,7 +145,7 @@ export class RegistrationService {
     return 'pending';
   }
 
-  private toAdminRegistrationRow(registration: RegistrationRecord) {
+  private toAdminRegistrationRow(registration: RegistrationRecord): AdminRegistrationRow {
     const parsed = this.parseRegistrationNote(registration.note);
     const status = this.resolveStatus(parsed.adminMeta);
     const audience = (registration.role || '').trim() || 'Khac';
@@ -428,16 +449,16 @@ export class RegistrationService {
       orderBy: { createdAt: 'desc' },
     });
 
-    let items = registrations.map((item) => this.toAdminRegistrationRow(item as RegistrationRecord));
+    let items: AdminRegistrationRow[] = registrations.map((item: RegistrationRecord) => this.toAdminRegistrationRow(item));
 
     if (query.status) {
-      items = items.filter((item) => item.status === query.status);
+      items = items.filter((item: AdminRegistrationRow) => item.status === query.status);
     }
     if (priority !== undefined) {
-      items = items.filter((item) => item.priority === priority);
+      items = items.filter((item: AdminRegistrationRow) => item.priority === priority);
     }
 
-    items = items.sort((a, b) => {
+    items = items.sort((a: AdminRegistrationRow, b: AdminRegistrationRow) => {
       if (a.priority !== b.priority) {
         return a.priority ? -1 : 1;
       }
@@ -446,10 +467,10 @@ export class RegistrationService {
 
     const counters = {
       total: items.length,
-      pending: items.filter((item) => item.status === 'pending').length,
-      approved: items.filter((item) => item.status === 'approved').length,
-      rejected: items.filter((item) => item.status === 'rejected').length,
-      priority: items.filter((item) => item.priority).length,
+      pending: items.filter((item: AdminRegistrationRow) => item.status === 'pending').length,
+      approved: items.filter((item: AdminRegistrationRow) => item.status === 'approved').length,
+      rejected: items.filter((item: AdminRegistrationRow) => item.status === 'rejected').length,
+      priority: items.filter((item: AdminRegistrationRow) => item.priority).length,
     };
 
     const totalItems = items.length;
@@ -537,11 +558,11 @@ export class RegistrationService {
     });
 
     const byId = new Map<number, RegistrationRecord>();
-    registrations.forEach((item) => {
+    registrations.forEach((item: RegistrationRecord) => {
       byId.set(item.id, item as RegistrationRecord);
     });
 
-    const items = [] as Array<any>;
+    const items: AdminRegistrationRow[] = [];
     const failures = [] as Array<{ id: number; message: string }>;
 
     for (const id of ids) {
@@ -628,7 +649,7 @@ export class RegistrationService {
       { header: 'Cap nhat luc', key: 'updatedAt', width: 20 },
     ];
 
-    listing.items.forEach((item) => {
+    listing.items.forEach((item: AdminRegistrationRow) => {
       worksheet.addRow({
         id: item.id,
         fullName: item.fullName,

@@ -364,7 +364,7 @@ export class EventService {
 
     console.log(`HUIT FEST: Normalized ${artistItems.length} artists, ${artistExtraItems.length} artistsExtra, ${timelineItems.length} timeline, ${journeyItems.length} journey, ${sponsorItems.length} sponsors, ${ruleItems.length} rules`);
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const now = new Date();
 
       // 1. Update the JSON config
