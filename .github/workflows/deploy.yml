@@ -1,0 +1,43 @@
+name: Deploy HUIT Fest to iNET
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOSTING_HOST }}
+          username: ${{ secrets.HOSTING_USER }}
+          key: ${{ secrets.HOSTING_SSH_KEY }}
+          port: ${{ secrets.HOSTING_PORT }}
+          script: |
+            set -e
+
+            PROJECT_DIR=/home/uqqwmiabhosting/public_html/huitfest.huitmedia.edu.vn
+            BACKEND_DIR="$PROJECT_DIR/backend"
+            NODE_ENV_PATH=/home/uqqwmiabhosting/nodevenv/public_html/huitfest.huitmedia.edu.vn/backend/22/bin/activate
+
+            source "$NODE_ENV_PATH"
+            unset NPM_CONFIG_PREFIX
+            unset npm_config_prefix
+            unset NPM_CONFIG_PRODUCTION
+            unset npm_config_production
+
+            cd "$PROJECT_DIR"
+            git fetch --all
+            git reset --hard origin/main
+
+            env -u NODE_ENV -u NPM_CONFIG_PRODUCTION -u npm_config_production -u NPM_CONFIG_PREFIX -u npm_config_prefix npm --prefix "$BACKEND_DIR" install --include=dev
+            env -u NPM_CONFIG_PREFIX -u npm_config_prefix npm --prefix "$BACKEND_DIR" run build
+            env -u NPM_CONFIG_PREFIX -u npm_config_prefix npm --prefix "$BACKEND_DIR" run prisma:generate
+
+            cloudlinux-selector restart --json --interpreter nodejs --app-root public_html/huitfest.huitmedia.edu.vn/backend
+            cloudlinux-selector restart --json --interpreter nodejs --app-root public_html/huitfest.huitmedia.edu.vn/frontend
